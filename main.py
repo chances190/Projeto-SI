@@ -1,6 +1,5 @@
 import pygame
 import random
-import sys
 import math
 import numpy as np
 
@@ -15,6 +14,14 @@ SAND = 1
 MUD = 2
 WATER = 3
 
+# Speed multipliers based on terrain types
+SPEED_MULTIPLIERS = {
+    OBSTACLE: 0,  # Cannot move through obstacles
+    SAND: 1.0,  # Normal speed on sand
+    MUD: 0.5,  # Slower speed on mud
+    WATER: 0.25,  # Even slower speed on water
+}
+
 # Cores dos terrenos
 COLORS = {
     OBSTACLE: (50, 50, 50),  # Cinza escuro (obstáculo)
@@ -28,6 +35,8 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ambiente com Terrenos e Busca")
 clock = pygame.time.Clock()
+clock.tick(60)
+
 
 # Função para gerar ruído Perlin 2D
 def perlin_noise(x, y, grad_grid, grid_size):
@@ -102,67 +111,111 @@ def generate_map():
 
     return grid
 
+# Draw the Map
+def draw_map(grid):
+    for y in range(GRID_SIZE):
+        for x in range(GRID_SIZE):
+            rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            pygame.draw.rect(screen, COLORS[grid[y][x]], rect)
+
+
+# Draw agent
+def draw_agent(agent_pos):
+    agent_rect = pygame.Rect(
+        agent_pos[0] * TILE_SIZE, agent_pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
+    )
+    pygame.draw.rect(screen, (255, 0, 0), agent_rect)  # Draw agent in red
+
+
+# Draw the Debug Mode Toggle Button
+def draw_debug_button():
+    button_rect = pygame.Rect(10, 10, 120, 30)
+    pygame.draw.rect(screen, (200, 200, 200), button_rect)
+    font = pygame.font.Font(None, 24)
+    text = font.render("Debug: " + ("ON" if debug_mode else "OFF"), True, (0, 0, 0))
+    screen.blit(text, (25, 18))
+    return button_rect
+
+
 # Função para posicionar agente ou comida evitando obstáculos
-def random_position(grid):
+def random_valid_position(grid):
     while True:
         x = random.randint(0, GRID_SIZE - 1)
         y = random.randint(0, GRID_SIZE - 1)
         if grid[y][x] != OBSTACLE:
             return x, y
 
-# Função principal
+# Move Agent Randomly
+def move_agent_randomly(agent_pos, grid):
+    x, y = agent_pos
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Left, Right, Up, Down
+    random.shuffle(directions)
+
+    for dx, dy in directions:
+        new_x, new_y = x + dx, y + dy
+        if 0 <= new_x < GRID_SIZE and 0 <= new_y < GRID_SIZE and grid[new_y][new_x] != OBSTACLE:
+            return new_x, new_y
+    return agent_pos
+
+
+# Move Agent with WASD
+def move_agent_with_wasd(agent_pos, grid, keys):
+    x, y = agent_pos
+    if keys[pygame.K_w] and y > 0 and grid[y - 1][x] != OBSTACLE:  # Move Up
+        y -= 1
+    elif keys[pygame.K_s] and y < GRID_SIZE - 1 and grid[y + 1][x] != OBSTACLE:  # Move Down
+        y += 1
+    elif keys[pygame.K_a] and x > 0 and grid[y][x - 1] != OBSTACLE:  # Move Left
+        x -= 1
+    elif keys[pygame.K_d] and x < GRID_SIZE - 1 and grid[y][x + 1] != OBSTACLE:  # Move Right
+        x += 1
+    return x, y
+
+
+# Delay the agent's movement based on terrain types
+def delay_movement(agent_pos, grid):
+    x, y = agent_pos
+    terrain_type = int(grid[y][x])
+    terrain_names = ["obstacle", "sand", "mud", "water"]
+    print("Current terrain: ", terrain_names[terrain_type])
+    pygame.time.delay(int(60 / SPEED_MULTIPLIERS.get(terrain_type, 1)))
+
+
+# Main Program
 def main():
-    # Gerar o mapa
     grid = generate_map()
+    agent_pos = random_valid_position(grid)
 
-    # Posicionar agente e comida
-    agent_pos = random_position(grid)
-    food_pos = random_position(grid)
+    global debug_mode
+    debug_mode = False
 
-    # Função para mover o agente aleatoriamente
-    def move_agent_randomly(agent_pos, grid):
-        x, y = agent_pos
-        # Escolher um movimento aleatório
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Esquerda, direita, cima, baixo
-        random.shuffle(directions)
-        for dx, dy in directions:
-            new_x, new_y = x + dx, y + dy
-            # Verificar se a nova posição está dentro dos limites e não é um obstáculo
-            if 0 <= new_x < GRID_SIZE and 0 <= new_y < GRID_SIZE and grid[new_y][new_x] != OBSTACLE:
-                return new_x, new_y
-        return agent_pos  # Se não mover, retorna a posição atual
-
-    while True:
+    running = True
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = event.pos
+                button_rect = draw_debug_button()
+                if button_rect.collidepoint(mouse_pos):
+                    debug_mode = not debug_mode  # Toggle debug mode
 
-        # Mover o agente aleatoriamente
-        agent_pos = move_agent_randomly(agent_pos, grid)
-
-        # Desenhar o mapa
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
-                rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                pygame.draw.rect(screen, COLORS[grid[row][col]], rect)
-
-        # Desenhar o agente
-        agent_rect = pygame.Rect(
-            agent_pos[0] * TILE_SIZE, agent_pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
-        )
-        pygame.draw.rect(screen, (0, 255, 0), agent_rect)  # Verde (agente)
-
-        # Desenhar a comida
-        food_rect = pygame.Rect(
-            food_pos[0] * TILE_SIZE, food_pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
-        )
-        pygame.draw.rect(screen, (255, 0, 0), food_rect)  # Vermelho (comida)
-
-        # Atualizar a tela
+        # Draw the environment
+        screen.fill((255, 255, 255))  # Clear screen with white
+        draw_map(grid)
+        draw_agent(agent_pos)
+        button_rect = draw_debug_button()
         pygame.display.flip()
-        clock.tick(10)  # Reduzir a velocidade de movimento do agente
 
+        # Update agent position
+        delay_movement(agent_pos, grid)
+        if debug_mode:
+            keys = pygame.key.get_pressed()
+            agent_pos = move_agent_with_wasd(agent_pos, grid, keys)
+        else:
+            agent_pos = move_agent_randomly(agent_pos, grid)
+
+    pygame.quit()
 
 if __name__ == "__main__":
     main()
