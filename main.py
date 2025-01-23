@@ -167,6 +167,9 @@ class Game:
 
         self.debug_mode = False
 
+        self.selected_algorithm = "None"
+        self.show_algorithm_options = False
+
     def draw_map(self):
         for y in range(GRID_SIZE):
             for x in range(GRID_SIZE):
@@ -194,38 +197,100 @@ class Game:
         pygame.draw.rect(self.screen, (0, 255, 0), food_rect)
 
     def draw_debug_button(self):
-        button_rect = pygame.Rect(10, 10, 120, 30)
-        pygame.draw.rect(self.screen, (200, 200, 200), button_rect)
+        width, height = 120, 30
+        x, y = 10, 10
+        color = (0, 0, 0, 178)  # 70% opacity black
+
+        button_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        button_surface.fill(color)
+        self.screen.blit(button_surface, (x, y))
+
         font = pygame.font.Font(None, 24)
-        text = font.render("Debug: " + ("ON" if self.debug_mode else "OFF"), True, (0, 0, 0))
-        self.screen.blit(text, (25, 18))
-        return button_rect
+        text = font.render(
+            "Debug: " + ("ON" if self.debug_mode else "OFF"), True, (255, 255, 255)
+        )  # White text
+        self.screen.blit(text, (x + 15, y + 8))
+
+        return pygame.Rect(x, y, width, height)  # Returns a button collider to check for clicks
+
+    def draw_algorithm_dropdown(self):
+        width, height = 170, 30
+        x, y = 10, 50
+        color = (0, 0, 0, 178)  # 70% opacity black
+
+        button_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        button_surface.fill(color)
+        self.screen.blit(button_surface, (x, y))
+
+        font = pygame.font.Font(None, 24)
+        text = font.render(
+            "Algorithm: " + self.selected_algorithm, True, (255, 255, 255)
+        )  # White text
+        self.screen.blit(text, (x + 15, y + 8))
+
+        return pygame.Rect(x, y, width, height)  # Returns a button collider to check for clicks
+
+    def draw_algorithm_options(self):
+        options = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*"]
+        width, height = 150, 30
+        x, y = 10, 80
+        color = (0, 0, 0, 178)  # 70% opacity black
+
+        for i, option in enumerate(options):
+            option_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+            option_surface.fill(color)
+            self.screen.blit(option_surface, (x, y + i * height))
+
+            font = pygame.font.Font(None, 24)
+            text = font.render(option, True, (255, 255, 255))  # White text
+            self.screen.blit(text, (x + 15, y + 8 + i * height))
+
+        return [pygame.Rect(x, y + i * height, width, height) for i in range(len(options))]
+
+    def handle_algorithm_selection(self, option_rects, mouse_pos):
+        options = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*"]
+        for i, rect in enumerate(option_rects):
+            if rect.collidepoint(mouse_pos):
+                self.selected_algorithm = options[i]
+                break
 
     def run(self):
         running = True
         while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = event.pos
-                    button_rect = self.draw_debug_button()
-                    if button_rect.collidepoint(mouse_pos):
-                        self.debug_mode = not self.debug_mode
-
-            self.screen.fill((255, 255, 255))
+            # Draw Environment
             self.draw_map()
             self.draw_agent()
             self.draw_food()
-            button_rect = self.draw_debug_button()
-            pygame.display.flip()
 
+            # Handle Agent Movement
             self.agent.delay_movement()
             if self.debug_mode:
                 keys = pygame.key.get_pressed()
                 self.agent.move_with_wasd(keys)
             else:
                 self.agent.move_randomly()
+
+            # Draw GUI
+            debug_button_rect = self.draw_debug_button()
+            algorithm_dropdown_rect = self.draw_algorithm_dropdown()
+            if self.show_algorithm_options:
+                option_rects = self.draw_algorithm_options()
+
+            # Handle GUI
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = event.pos
+                    if debug_button_rect.collidepoint(mouse_pos):
+                        self.debug_mode = not self.debug_mode
+                    elif algorithm_dropdown_rect.collidepoint(mouse_pos):
+                        self.show_algorithm_options = not self.show_algorithm_options
+                    elif self.show_algorithm_options:
+                        self.handle_algorithm_selection(option_rects, mouse_pos)
+                        self.show_algorithm_options = False
+
+            pygame.display.flip()
 
         pygame.quit()
 
