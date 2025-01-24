@@ -2,6 +2,7 @@ import pygame
 import random
 import math
 import numpy as np
+from algorithms import bfs, dfs, uniform, greedy, a_star, genetic
 
 # Configurações da janela
 WIDTH, HEIGHT = 800, 800
@@ -30,14 +31,28 @@ COLORS = {
     WATER: (0, 0, 255),  # Azul (água)
 }
 
-class Tile:
-    def __init__(self, terrain_type):
-        self.terrain_type = terrain_type
-        self.visits = 0
+# Global debug mode
+debug_mode = False
+
+
+def print_debug(*args):
+    if debug_mode:
+        print(*args)
+
 
 class Environment:
+    class Tile:
+        def __init__(self, terrain_type):
+            self.terrain_type = terrain_type
+            self.checked = False
+
+    class Food:
+        def __init__(self, position: tuple[int, int]):
+            self.pos = position
+
     def __init__(self):
         self.grid = self._generate_grid()
+        self.food = self.Food(self.get_random_valid_pos())
 
     def _generate_grid(self):
         grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=object)
@@ -51,13 +66,13 @@ class Environment:
             for x in range(GRID_SIZE):
                 value = self._perlin_noise(x * scale, y * scale, grad_grid, GRID_SIZE)
                 if value < -0.1:
-                    grid[y][x] = Tile(OBSTACLE)
+                    grid[y][x] = self.Tile(OBSTACLE)
                 elif value < 0.2:
-                    grid[y][x] = Tile(SAND)
+                    grid[y][x] = self.Tile(SAND)
                 elif value < 0.35:
-                    grid[y][x] = Tile(MUD)
+                    grid[y][x] = self.Tile(MUD)
                 else:
-                    grid[y][x] = Tile(WATER)
+                    grid[y][x] = self.Tile(WATER)
         return grid
 
     def _perlin_noise(self, x, y, grad_grid, grid_size):
@@ -93,25 +108,45 @@ class Environment:
 
         return nxy
 
-    def random_valid_position(self):
+    def get_terrain_type(self, position):
+        x, y = position
+        return self.grid[y][x].terrain_type
+
+    def is_food(self, position):
+        x, y = position
+        self.grid[y][x].checked = True
+        return position == self.food.pos
+
+    def get_valid_neighbors(self, position):
+        x, y = position
+        neighbors = []
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            nx, ny = x + dx, y + dy
+            if (
+                0 <= nx < GRID_SIZE
+                and 0 <= ny < GRID_SIZE
+                and self.get_terrain_type((nx, ny)) != OBSTACLE
+            ):
+                neighbors.append((nx, ny))
+        return neighbors
+
+    def get_random_valid_pos(self):
         while True:
             x = random.randint(0, GRID_SIZE - 1)
             y = random.randint(0, GRID_SIZE - 1)
-            if self.grid[y][x].terrain_type != OBSTACLE:
+            if self.get_terrain_type((x, y)) != OBSTACLE:
                 return x, y
-
-class Food:
-    def __init__(self, position):
-        self.position = position
 
 
 class Agent:
-    def __init__(self, environment):
+    def __init__(self, environment: Environment):
         self._env = environment
-        self.position = self._env.random_valid_position()
+        self.pos = self._env.get_random_valid_pos()
+        self.path = []
+        self.step = 0
 
     def move_randomly(self):
-        x, y = self.position
+        x, y = self.pos
         directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
         random.shuffle(directions)
         for dx, dy in directions:
@@ -119,39 +154,42 @@ class Agent:
             if (
                 0 <= new_x < GRID_SIZE
                 and 0 <= new_y < GRID_SIZE
-                and self._env.grid[new_y][new_x].terrain_type != OBSTACLE
+                and self._env.get_terrain_type((new_x, new_y)) != OBSTACLE
             ):
-                self.position = (new_x, new_y)
-                self._env.grid[new_y][new_x].visits += 1
-                return
-        self._env.grid[y][x].visits += 1
+                self.pos = (new_x, new_y)
 
     def move_with_wasd(self, keys):
-        x, y = self.position
-        if keys[pygame.K_w] and y > 0 and self._env.grid[y - 1][x].terrain_type != OBSTACLE:
+        x, y = self.pos
+        if keys[pygame.K_w] and y > 0 and self._env.get_terrain_type((x, y - 1)) != OBSTACLE:
             y -= 1
         elif (
             keys[pygame.K_s]
             and y < GRID_SIZE - 1
-            and self._env.grid[y + 1][x].terrain_type != OBSTACLE
+            and self._env.get_terrain_type((x, y + 1)) != OBSTACLE
         ):
             y += 1
-        elif keys[pygame.K_a] and x > 0 and self._env.grid[y][x - 1].terrain_type != OBSTACLE:
+        elif keys[pygame.K_a] and x > 0 and self._env.get_terrain_type((x - 1, y)) != OBSTACLE:
             x -= 1
         elif (
             keys[pygame.K_d]
             and x < GRID_SIZE - 1
-            and self._env.grid[y][x + 1].terrain_type != OBSTACLE
+            and self._env.get_terrain_type((x + 1, y)) != OBSTACLE
         ):
             x += 1
-        self.position = (x, y)
-        self._env.grid[y][x].visits += 1
+        self.pos = (x, y)
+
+    def move_with_algorithm(self, algorithm, *args):
+        if not self.path:
+            self.path = algorithm(self._env, self.pos, *args)
+            self.step = 0
+        if not self._env.is_food(self.pos):
+            self.step += 1
+            self.pos = self.path[self.step]
 
     def delay_movement(self):
-        x, y = self.position
-        terrain_type = self._env.grid[y][x].terrain_type
+        terrain_type = self._env.get_terrain_type((self.pos))
         terrain_names = ["obstacle", "sand", "mud", "water"]
-        print("Current terrain: ", terrain_names[terrain_type])
+        print_debug("Current terrain: ", terrain_names[terrain_type])
         pygame.time.delay(int(60 / SPEED_MULTIPLIERS.get(terrain_type, 1)))
 
 class Game:
@@ -161,11 +199,10 @@ class Game:
         pygame.display.set_caption("Ambiente com Terrenos e Busca")
         self.clock = pygame.time.Clock()
 
+        self.debug_mode = False
+
         self.environment = Environment()
         self.agent = Agent(self.environment)
-        self.food = Food(self.environment.random_valid_position())
-
-        self.debug_mode = False
 
         self.selected_algorithm = "None"
         self.show_algorithm_options = False
@@ -175,13 +212,13 @@ class Game:
             for x in range(GRID_SIZE):
                 rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 pygame.draw.rect(
-                    self.screen, COLORS[self.environment.grid[y][x].terrain_type], rect
+                    self.screen, COLORS[self.environment.get_terrain_type((x, y))], rect
                 )
 
     def draw_agent(self):
         agent_rect = pygame.Rect(
-            self.agent.position[0] * TILE_SIZE,
-            self.agent.position[1] * TILE_SIZE,
+            self.agent.pos[0] * TILE_SIZE,
+            self.agent.pos[1] * TILE_SIZE,
             TILE_SIZE,
             TILE_SIZE,
         )
@@ -189,8 +226,8 @@ class Game:
 
     def draw_food(self):
         food_rect = pygame.Rect(
-            self.food.position[0] * TILE_SIZE,
-            self.food.position[1] * TILE_SIZE,
+            self.environment.food.pos[0] * TILE_SIZE,
+            self.environment.food.pos[1] * TILE_SIZE,
             TILE_SIZE,
             TILE_SIZE,
         )
@@ -231,7 +268,7 @@ class Game:
         return pygame.Rect(x, y, width, height)  # Returns a button collider to check for clicks
 
     def draw_algorithm_options(self):
-        options = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*"]
+        options = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*", "Genetic"]
         width, height = 150, 30
         x, y = 10, 80
         color = (0, 0, 0, 178)  # 70% opacity black
@@ -248,13 +285,14 @@ class Game:
         return [pygame.Rect(x, y + i * height, width, height) for i in range(len(options))]
 
     def handle_algorithm_selection(self, option_rects, mouse_pos):
-        options = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*"]
+        options = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*", "Genetic"]
         for i, rect in enumerate(option_rects):
             if rect.collidepoint(mouse_pos):
                 self.selected_algorithm = options[i]
                 break
 
     def run(self):
+        global debug_mode
         running = True
         while running:
             # Draw Environment
@@ -267,8 +305,25 @@ class Game:
             if self.debug_mode:
                 keys = pygame.key.get_pressed()
                 self.agent.move_with_wasd(keys)
-            else:
+            elif self.selected_algorithm == "None":
                 self.agent.move_randomly()
+            elif self.selected_algorithm == "DFS":
+                self.agent.move_with_algorithm(dfs)
+            elif self.selected_algorithm == "BFS":
+                self.agent.move_with_algorithm(bfs)
+            elif self.selected_algorithm == "Uniform":
+                self.agent.move_with_algorithm(uniform)
+            elif self.selected_algorithm == "Greedy":
+                self.agent.move_with_algorithm(greedy, self.environment.food.pos)
+            elif self.selected_algorithm == "A*":
+                self.agent.move_with_algorithm(a_star, self.environment.food.pos)
+            elif self.selected_algorithm == "Genetic":
+                self.agent.move_with_algorithm(genetic, self.environment.food.pos)
+
+            if (
+                self.agent.pos == self.environment.food.pos
+            ):  # Checagem direta pra não "visitar" a tile
+                self.environment.food = Environment.Food(self.environment.get_random_valid_pos())
 
             # Draw GUI
             debug_button_rect = self.draw_debug_button()
@@ -284,6 +339,7 @@ class Game:
                     mouse_pos = event.pos
                     if debug_button_rect.collidepoint(mouse_pos):
                         self.debug_mode = not self.debug_mode
+                        debug_mode = self.debug_mode  # Update global debug_mode
                     elif algorithm_dropdown_rect.collidepoint(mouse_pos):
                         self.show_algorithm_options = not self.show_algorithm_options
                     elif self.show_algorithm_options:
