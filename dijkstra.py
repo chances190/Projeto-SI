@@ -120,7 +120,7 @@ class Dijkstra:
                 collected_food += 1
                 print(f"Comidas coletadas: {collected_food}")
 
-                # Gerar nova posição para a comida
+              
                 goal = random_position()
             else:
                 print("Nenhum caminho encontrado!")
