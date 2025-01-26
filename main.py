@@ -1,27 +1,14 @@
+
 import pygame
 import random
 import sys
 import math
 import numpy as np
+from uniformCostSearch import UniformCostSearch
+from constants import WIDTH, HEIGHT, GRID_SIZE, TILE_SIZE, COLORS, OBSTACLE, SAND, MUD, WATER
 
-# Configurações da janela
-WIDTH, HEIGHT = 800, 800
-GRID_SIZE = 40  # Tamanho do grid (20x20)
-TILE_SIZE = WIDTH // GRID_SIZE
+# Restante do código permanece igual
 
-# Tipos de terrenos
-OBSTACLE = 0
-SAND = 1
-MUD = 2
-WATER = 3
-
-# Cores dos terrenos
-COLORS = {
-    OBSTACLE: (50, 50, 50),  # Cinza escuro (obstáculo)
-    SAND: (194, 178, 128),  # Bege (areia)
-    MUD: (139, 69, 19),  # Marrom (atoleiro)
-    WATER: (0, 0, 255),  # Azul (água)
-}
 
 # Inicialização do Pygame
 pygame.init()
@@ -120,6 +107,7 @@ def main():
     food_pos = random_position(grid)
 
     # Função para mover o agente aleatoriamente
+    """ 
     def move_agent_randomly(agent_pos, grid):
         x, y = agent_pos
         # Escolher um movimento aleatório
@@ -132,20 +120,52 @@ def main():
                 return new_x, new_y
         return agent_pos  # Se não mover, retorna a posição atual
 
+    """
+    search = UniformCostSearch(grid)
+    came_from, cost_so_far = search.dijkstra_algorithm(agent_pos, food_pos)
+    path_index = 0
+
+    if not came_from or food_pos not in came_from:
+        print("Nenhum caminho encontrado entre o agente e a comida!")
+        pygame.quit()
+        sys.exit()
+
+# Construir o caminho se ele foi encontrado
+    path = []
+    current = food_pos
+    while current != agent_pos:
+        path.append(current)
+        current = came_from[current]
+    path.append(agent_pos)
+    path.reverse()
+
+    
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                sys.exit()
+                sys.exit()     
+
 
         # Mover o agente aleatoriamente
-        agent_pos = move_agent_randomly(agent_pos, grid)
+        """agent_pos = move_agent_randomly(agent_pos, grid)"""
 
         # Desenhar o mapa
+
+        if path_index < len(path):
+            agent_pos = path[path_index]
+            path_index += 1
+            
+
         for row in range(GRID_SIZE):
             for col in range(GRID_SIZE):
                 rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                 pygame.draw.rect(screen, COLORS[grid[row][col]], rect)
+
+         # Desenhar o caminho (em azul claro)
+        for pos in path:
+            rect = pygame.Rect(pos[0] * TILE_SIZE, pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+            pygame.draw.rect(screen, (173, 216, 230), rect)
 
         # Desenhar o agente
         agent_rect = pygame.Rect(
