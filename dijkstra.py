@@ -2,9 +2,12 @@ from queue import PriorityQueue
 import pygame
 from constants import GRID_SIZE, OBSTACLE, SAND, MUD, WATER,TILE_SIZE,WIDTH,HEIGHT,COLORS
 import sys
+from map_game import random_position
+import random
+
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-import random
+
 class Dijkstra:
     def __init__(self, grid):
         self.grid = grid
@@ -118,7 +121,7 @@ class Dijkstra:
                 print(f"Comidas coletadas: {collected_food}")
 
                 # Gerar nova posição para a comida
-                goal = self.random_position()
+                goal = random_position()
             else:
                 print("Nenhum caminho encontrado!")
                 print(f"Comidas coletadas: {collected_food}")
@@ -148,9 +151,3 @@ class Dijkstra:
             return 10
         return float('inf')
 
-    def random_position(self):
-        while True:
-            x = random.randint(0, GRID_SIZE - 1)
-            y = random.randint(0, GRID_SIZE - 1)
-            if self.grid[y][x] != OBSTACLE:
-                return x, y
