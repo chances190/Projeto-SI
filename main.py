@@ -4,11 +4,10 @@ import random
 import sys
 import math
 import numpy as np
-from uniformCostSearch import UniformCostSearch
+from dijkstra import Dijkstra
 from constants import WIDTH, HEIGHT, GRID_SIZE, TILE_SIZE, COLORS, OBSTACLE, SAND, MUD, WATER
-
+from queue import PriorityQueue
 # Restante do código permanece igual
-
 
 # Inicialização do Pygame
 pygame.init()
@@ -106,82 +105,9 @@ def main():
     agent_pos = random_position(grid)
     food_pos = random_position(grid)
 
-    # Função para mover o agente aleatoriamente
-    """ 
-    def move_agent_randomly(agent_pos, grid):
-        x, y = agent_pos
-        # Escolher um movimento aleatório
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Esquerda, direita, cima, baixo
-        random.shuffle(directions)
-        for dx, dy in directions:
-            new_x, new_y = x + dx, y + dy
-            # Verificar se a nova posição está dentro dos limites e não é um obstáculo
-            if 0 <= new_x < GRID_SIZE and 0 <= new_y < GRID_SIZE and grid[new_y][new_x] != OBSTACLE:
-                return new_x, new_y
-        return agent_pos  # Se não mover, retorna a posição atual
-
-    """
-    search = UniformCostSearch(grid)
-    came_from, cost_so_far = search.dijkstra_algorithm(agent_pos, food_pos)
-    path_index = 0
-
-    if not came_from or food_pos not in came_from:
-        print("Nenhum caminho encontrado entre o agente e a comida!")
-        pygame.quit()
-        sys.exit()
-
-# Construir o caminho se ele foi encontrado
-    path = []
-    current = food_pos
-    while current != agent_pos:
-        path.append(current)
-        current = came_from[current]
-    path.append(agent_pos)
-    path.reverse()
-
-    
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()     
-
-
-        # Mover o agente aleatoriamente
-        """agent_pos = move_agent_randomly(agent_pos, grid)"""
-
-        # Desenhar o mapa
-
-        if path_index < len(path):
-            agent_pos = path[path_index]
-            path_index += 1
-            
-
-        for row in range(GRID_SIZE):
-            for col in range(GRID_SIZE):
-                rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                pygame.draw.rect(screen, COLORS[grid[row][col]], rect)
-
-         # Desenhar o caminho (em azul claro)
-        for pos in path:
-            rect = pygame.Rect(pos[0] * TILE_SIZE, pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-            pygame.draw.rect(screen, (173, 216, 230), rect)
-
-        # Desenhar o agente
-        agent_rect = pygame.Rect(
-            agent_pos[0] * TILE_SIZE, agent_pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
-        )
-        pygame.draw.rect(screen, (0, 255, 0), agent_rect)  # Verde (agente)
-
-        # Desenhar a comida
-        food_rect = pygame.Rect(
-            food_pos[0] * TILE_SIZE, food_pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
-        )
-        pygame.draw.rect(screen, (255, 0, 0), food_rect)  # Vermelho (comida)
-
-        # Atualizar a tela
-        pygame.display.flip()
-        clock.tick(10)  # Reduzir a velocidade de movimento do agente
+    # Inicializar a busca
+    search = Dijkstra(grid)
+    search.dijkstra_algorithm(agent_pos,food_pos)
 
 
 if __name__ == "__main__":
