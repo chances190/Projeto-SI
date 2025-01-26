@@ -10,8 +10,8 @@ class Dijkstra:
         self.grid = grid
 
     def dijkstra_algorithm(self, start, goal):
-        collected_food = 0  # Contador de comidas coletadas
-        while True:  # Continua enquanto o jogo estiver rodando
+        collected_food = 0  
+        while True: 
             frontier = PriorityQueue()
             frontier.put((0, start))
             came_from = {start: None}
@@ -25,15 +25,15 @@ class Dijkstra:
                         pygame.quit()
                         sys.exit()
 
-                # Retirar o próximo nó da fronteira
+               
                 _, current = frontier.get()
 
-                # Se chegou ao objetivo, encerrar
+            
                 if current == goal:
                     path_found = True
                     break
 
-                # Explorar os vizinhos
+               
                 for neighbor in self.get_neighbors(current):
                     new_cost = cost_so_far[current] + self.get_cost(neighbor)
                     if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
@@ -41,18 +41,17 @@ class Dijkstra:
                         frontier.put((new_cost, neighbor))
                         came_from[neighbor] = current
 
-                # Atualizar a tela para mostrar o progresso
+               
                 for row in range(GRID_SIZE):
                     for col in range(GRID_SIZE):
                         rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                         pygame.draw.rect(screen, COLORS[self.grid[row][col]], rect)
 
-                # Mostrar os nós explorados em azul claro
                 for pos in came_from.keys():
                     rect = pygame.Rect(pos[0] * TILE_SIZE, pos[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                     pygame.draw.rect(screen, (173, 216, 230), rect)
 
-                # Desenhar o agente e a comida
+                
                 agent_rect = pygame.Rect(
                     start[0] * TILE_SIZE, start[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
                 )
@@ -63,11 +62,10 @@ class Dijkstra:
                 )
                 pygame.draw.rect(screen, (255, 0, 0), food_rect)  # Vermelho (comida)
 
-                # Atualizar a tela
                 pygame.display.flip()
                 clock.tick(30)
 
-            # Se o caminho foi encontrado, reconstruir e exibir
+            
             if path_found:
                 path = []
                 current = goal
@@ -77,7 +75,7 @@ class Dijkstra:
                 path.append(start)
                 path.reverse()
 
-                # Mostrar o caminho percorrido e mover o agente
+               
                 for pos in path:
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -85,37 +83,37 @@ class Dijkstra:
                             pygame.quit()
                             sys.exit()
 
-                    # Desenhar o mapa
+                    
                     for row in range(GRID_SIZE):
                         for col in range(GRID_SIZE):
                             rect = pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                             pygame.draw.rect(screen, COLORS[self.grid[row][col]], rect)
 
-                    # Mostrar o caminho em azul claro
+                    
                     for visited in path:
                         rect = pygame.Rect(visited[0] * TILE_SIZE, visited[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
                         pygame.draw.rect(screen, (173, 216, 230), rect)
 
-                    # Mover o agente
+                  
                     start = pos
 
-                    # Desenhar o agente
+                    
                     agent_rect = pygame.Rect(
                         start[0] * TILE_SIZE, start[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
                     )
                     pygame.draw.rect(screen, (0, 255, 0), agent_rect)  # Verde (agente)
 
-                    # Desenhar a comida
+               
                     food_rect = pygame.Rect(
                         goal[0] * TILE_SIZE, goal[1] * TILE_SIZE, TILE_SIZE, TILE_SIZE
                     )
                     pygame.draw.rect(screen, (255, 0, 0), food_rect)  # Vermelho (comida)
 
-                    # Atualizar a tela
+                    
                     pygame.display.flip()
                     clock.tick(10)
 
-                # Incrementar o contador de comidas
+                
                 collected_food += 1
                 print(f"Comidas coletadas: {collected_food}")
 
