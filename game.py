@@ -87,7 +87,7 @@ class Game:
         elif self.selected_algorithm == "BFS":
             return algorithm.bfs(env, start)
         elif self.selected_algorithm == "Uniform":
-            return algorithm.uniform_cost(env, start)
+            return algorithm.uniform_cost(env, start,goal)
         elif self.selected_algorithm == "Greedy":
             return algorithm.greedy(env, start, goal)
         elif self.selected_algorithm == "A*":

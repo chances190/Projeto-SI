@@ -20,7 +20,7 @@ def bfs(env, start):
     return NotImplemented
 
 
-def uniform(env, start):
+def uniform(env, start,goal):
     return NotImplemented
 
 

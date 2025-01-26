@@ -69,3 +69,13 @@ class Environment:
             for tile in row:
                 tile.checked = False
                 tile.is_path = False
+    
+    def get_cost(self, position):
+        x, y = position
+        if self.grid[y][x] == SAND:
+            return 1
+        elif self.grid[y][x] == MUD:
+            return 5
+        elif self.grid[y][x] == WATER:
+            return 10
+        return float('inf')
