@@ -9,7 +9,24 @@ A função deve retornar um caminho na forma [(x1, y1), (x2, y2), ..., (xn, yn)]
 começando do ponto inicial e terminando no objetivo
 """
 
-from config import TERRAIN_COST
+from config import (
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    FPS,
+    BASE_DELAY,
+    GRID_SIZE,
+    TILE_SIZE,
+    COLOR_MAP,
+    TERRAIN_COST,
+    AGENT_COLOR,
+    FOOD_COLOR,
+    ALGORITHMS,
+)
+from queue import PriorityQueue
+import pygame
+from environment import Environment
+import sys
+
 
 
 def dfs(env, start):
@@ -20,9 +37,43 @@ def bfs(env, start):
     return NotImplemented
 
 
-def uniform(env, start,goal):
-    return NotImplemented
+def uniform_cost(env, start, goal):
+    frontier = PriorityQueue()
+    frontier.put((0, start)) 
+    came_from = {start: None}  
+    cost_so_far = {start: 0}  
 
+    while not frontier.empty():
+        _, current = frontier.get()
+
+        # Verifica se o objetivo foi alcançado
+        if current == goal:
+            return reconstruct_path(came_from, start, goal)
+
+        # Itera sobre vizinhos válidos
+        for neighbor in Environment.get_valid_neighbors(env, current):
+            new_cost = cost_so_far[current] + Environment.get_cost(env, neighbor)
+
+            # Só atualiza se o vizinho não foi visitado ou o custo for menor
+            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
+                cost_so_far[neighbor] = new_cost
+                frontier.put((new_cost, neighbor))
+                came_from[neighbor] = current
+
+   
+    print("Nenhum caminho encontrado entre o ponto inicial e o objetivo.")
+    return []
+
+
+def reconstruct_path(came_from, start, goal):
+    path = []
+    current = goal
+    while current != start:  
+        path.append(current)
+        current = came_from[current]
+    path.append(start)
+    path.reverse() 
+    return path
 
 def greedy(env, start, goal):
     return NotImplemented
