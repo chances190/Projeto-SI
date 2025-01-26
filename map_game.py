@@ -83,3 +83,6 @@ def random_position(grid):
         y = random.randint(0, GRID_SIZE - 1)
         if grid[y][x] != OBSTACLE:
             return x, y
+        
+
+        
