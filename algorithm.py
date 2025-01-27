@@ -38,6 +38,7 @@ def bfs(env, start):
 
 
 def uniform_cost(env, start, goal):
+    collected_foods = 0
     frontier = PriorityQueue()
     frontier.put((0, start)) 
     came_from = {start: None}  
@@ -46,15 +47,14 @@ def uniform_cost(env, start, goal):
     while not frontier.empty():
         _, current = frontier.get()
 
-        # Verifica se o objetivo foi alcançado
         if current == goal:
+            collected_foods +=1 
+            print(f"Número de comidas coletadas: {collected_foods}",{collected_foods})
             return reconstruct_path(came_from, start, goal)
 
-        # Itera sobre vizinhos válidos
         for neighbor in Environment.get_valid_neighbors(env, current):
             new_cost = cost_so_far[current] + Environment.get_cost(env, neighbor)
 
-            # Só atualiza se o vizinho não foi visitado ou o custo for menor
             if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
                 cost_so_far[neighbor] = new_cost
                 frontier.put((new_cost, neighbor))
