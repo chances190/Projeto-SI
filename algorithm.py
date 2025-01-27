@@ -46,6 +46,7 @@ def uniform_cost(env, start, goal):
     cost_so_far = {start: 0}  
 
     while not frontier.empty():
+           
         _, current = frontier.get()
 
         if current == goal:
