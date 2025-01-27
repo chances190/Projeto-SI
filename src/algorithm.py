@@ -8,7 +8,8 @@ def dfs(game, env, start):
     path = []
 
     while stack:
-        game.update_display()
+        if not game.update_display():
+            return None
         current = stack.pop()
         if current in visited:
             continue
@@ -33,7 +34,9 @@ def bfs(game, env, start):
     parent = {start: None}
 
     while queue:
-        game.update_display()
+        if not game.update_display():
+            return None
+
         current = queue.popleft()
         if current in visited:
             continue
@@ -65,7 +68,8 @@ def uniform(game, env, start):
     cost = {start: 0}
 
     while priority_queue:
-        game.update_display()
+        if not game.update_display():
+            return None
         current_cost, current = heappop(priority_queue)
         if current in visited:
             continue
@@ -101,7 +105,8 @@ def greedy(game, env, start, goal):
     parent = {start: None}
 
     while priority_queue:
-        game.update_display()
+        if not game.update_display():
+            return None
         _, current = heappop(priority_queue)
         if current in visited:
             continue
@@ -136,7 +141,8 @@ def a_star(game, env, start, goal):
     cost = {start: 0}
 
     while priority_queue:
-        game.update_display()
+        if not game.update_display():
+            return None
         _, current = heappop(priority_queue)
         if current in visited:
             continue

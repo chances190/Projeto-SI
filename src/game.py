@@ -49,7 +49,7 @@ class Game:
         elif reset_rect.collidepoint(pos):
             self.environment.reset()
             self.agent = Agent(self.environment, self.environment.get_random_position())
-            self.update_movement()
+            return False
         elif algo_rect.collidepoint(pos):
             self.show_algorithm_options = not self.show_algorithm_options
 
@@ -61,13 +61,16 @@ class Game:
                     self.show_algorithm_options = False
                     self.agent.reset_path()
                     break
+        return True
 
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.handle_click(event.pos)
+                if not self.handle_click(event.pos):
+                    return False
+        return True
 
     def move_debug(self):
         keys = pygame.key.get_pressed()
@@ -173,8 +176,10 @@ class Game:
             self.ui.draw_algorithm_options(self.screen)
 
     def update_display(self):
-        self.handle_events()
+        if not self.handle_events():
+            return False
         self.render()
+        return True
 
     def run(self):
         while self.running:
