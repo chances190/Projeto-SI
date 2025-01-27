@@ -10,5 +10,7 @@ pip install -r requirements.txt
 
 Para executar:
 ```bash
-python3 main.py
+python3 game.py
 ```
+
+Obs: As funções de busca são implementadas no arquivo `algorithm.py`. Por favor leiam os comentários no cabeçalho do arquivo antes de implementar.
