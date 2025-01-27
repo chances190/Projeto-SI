@@ -113,15 +113,16 @@ class Game:
             self.move_debug()
         elif self.selected_algorithm == "None":
             self.agent.move_random()
-        elif not self.agent.path:
-            self.agent.path = self.run_algorithm()
+        else:
             if not self.agent.path:
-                print("No path found!")
-                return
-            for x, y in self.agent.path:
-                self.environment.grid[y][x].is_path = True
+                self.agent.path = self.run_algorithm()
+                if not self.agent.path:
+                    print("No path found!")
+                    return
+                for x, y in self.agent.path:
+                    self.environment.grid[y][x].is_path = True
             self.agent.follow_path()
-            return
+            pass
 
         self.last_move_time = current_time
 
