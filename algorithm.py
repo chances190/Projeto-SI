@@ -1,12 +1,19 @@
 """
-env.check((x, y)) -> (terrain_type, is_food)
-env.get_valid_neighbors((x, y)) -> [(x1, y1), (x2, y2), ..., (xn, yn)]
-(Só esses dois métodos atualizam a visualização do algoritmo)
+Função para checar uma posição: 
+    env.check((x, y)) -> (terrain_type, is_food)
 
-TERRAIN_COST[terrain_type] -> int
+Função para pegar os vizinhos válidos de uma posição:
+    env.get_valid_neighbors((x, y)) -> [(x1, y1), (x2, y2), ..., (xn, yn)]
 
-A função deve retornar um caminho na forma [(x1, y1), (x2, y2), ..., (xn, yn)]
-começando do ponto inicial e terminando no objetivo
+Para pegar o custo do terreno:
+    env.get_cost((x,y)) -> cost
+
+O algoritmo de busca deve retornar um caminho na forma [(x1, y1), (x2, y2), ..., (xn, yn)]
+começando do ponto inicial e terminando no objetivo. 
+
+Se vocês checarem o terreno sem usar essas funções ou retornarem algo diferente
+o jogo não vai saber mostrar o que tá sendo buscado. Se for preciso implementar
+algo diferente, façam com cuidado pra não quebrar a lógica de display.
 """
 
 from config import (
@@ -37,43 +44,9 @@ def bfs(env, start):
     return NotImplemented
 
 
-def uniform_cost(env, start, goal):
-    collected_foods = 0
-    frontier = PriorityQueue()
-    frontier.put((0, start)) 
-    came_from = {start: None}  
-    cost_so_far = {start: 0}  
+def uniform(env, start,goal):
+    return NotImplemented
 
-    while not frontier.empty():
-        _, current = frontier.get()
-
-        if current == goal:
-            collected_foods +=1 
-            print(f"Número de comidas coletadas: {collected_foods}",{collected_foods})
-            return reconstruct_path(came_from, start, goal)
-
-        for neighbor in Environment.get_valid_neighbors(env, current):
-            new_cost = cost_so_far[current] + Environment.get_cost(env, neighbor)
-
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                cost_so_far[neighbor] = new_cost
-                frontier.put((new_cost, neighbor))
-                came_from[neighbor] = current
-
-   
-    print("Nenhum caminho encontrado entre o ponto inicial e o objetivo.")
-    return []
-
-
-def reconstruct_path(came_from, start, goal):
-    path = []
-    current = goal
-    while current != start:  
-        path.append(current)
-        current = came_from[current]
-    path.append(start)
-    path.reverse() 
-    return path
 
 def greedy(env, start, goal):
     return NotImplemented
