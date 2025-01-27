@@ -1,36 +1,166 @@
-"""
-env.check((x, y)) -> (terrain_type, is_food)
-env.get_valid_neighbors((x, y)) -> [(x1, y1), (x2, y2), ..., (xn, yn)]
-(Só esses dois métodos atualizam a visualização do algoritmo)
-
-TERRAIN_COST[terrain_type] -> int
-
-A função deve retornar um caminho na forma [(x1, y1), (x2, y2), ..., (xn, yn)]
-começando do ponto inicial e terminando no objetivo
-"""
-
-from config import TERRAIN_COST
+from collections import deque
+from heapq import heappop, heappush
 
 
-def dfs(env, start):
-    return NotImplemented
+def dfs(game, env, start):
+    stack = [start]
+    visited = set()
+    path = []
+
+    while stack:
+        game.update_display()
+        current = stack.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        path.append(current)
+        is_food = env.check(current)
+        if is_food:
+            return path
+
+        neighbors = env.get_valid_neighbors(current)
+        for neighbor in neighbors:
+            if neighbor not in visited:
+                stack.append(neighbor)
+
+    return None
 
 
-def bfs(env, start):
-    return NotImplemented
+def bfs(game, env, start):
+    queue = deque([start])
+    visited = set()
+    path = []
+    parent = {start: None}
+
+    while queue:
+        game.update_display()
+        current = queue.popleft()
+        if current in visited:
+            continue
+        visited.add(current)
+        path.append(current)
+        is_food = env.check(current)
+        if is_food:
+            # Reconstruct path
+            full_path = []
+            while current is not None:
+                full_path.append(current)
+                current = parent[current]
+            return full_path[::-1]
+
+        neighbors = env.get_valid_neighbors(current)
+        for neighbor in neighbors:
+            if neighbor not in visited and neighbor not in queue:
+                queue.append(neighbor)
+                parent[neighbor] = current
+
+    return None
 
 
-def uniform(env, start):
-    return NotImplemented
+def uniform(game, env, start):
+    priority_queue = []
+    heappush(priority_queue, (0, start))
+    visited = set()
+    parent = {start: None}
+    cost = {start: 0}
+
+    while priority_queue:
+        game.update_display()
+        current_cost, current = heappop(priority_queue)
+        if current in visited:
+            continue
+        visited.add(current)
+        is_food = env.check(current)
+        if is_food:
+            # Reconstruct path
+            full_path = []
+            while current is not None:
+                full_path.append(current)
+                current = parent[current]
+            return full_path[::-1]
+
+        neighbors = env.get_valid_neighbors(current)
+        for neighbor in neighbors:
+            new_cost = current_cost + env.get_cost(neighbor)
+            if neighbor not in cost or new_cost < cost[neighbor]:
+                cost[neighbor] = new_cost
+                priority = new_cost
+                heappush(priority_queue, (priority, neighbor))
+                parent[neighbor] = current
+
+    return None
 
 
-def greedy(env, start, goal):
-    return NotImplemented
+def greedy(game, env, start, goal):
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    priority_queue = []
+    heappush(priority_queue, (0, start))
+    visited = set()
+    parent = {start: None}
+
+    while priority_queue:
+        game.update_display()
+        _, current = heappop(priority_queue)
+        if current in visited:
+            continue
+        visited.add(current)
+        is_food = env.check(current)
+        if current == goal or is_food:
+            # Reconstruct path
+            full_path = []
+            while current is not None:
+                full_path.append(current)
+                current = parent[current]
+            return full_path[::-1]
+
+        neighbors = env.get_valid_neighbors(current)
+        for neighbor in neighbors:
+            if neighbor not in visited:
+                priority = heuristic(neighbor, goal)
+                heappush(priority_queue, (priority, neighbor))
+                parent[neighbor] = current
+
+    return None
 
 
-def a_star(env, start, goal):
-    return NotImplemented
+def a_star(game, env, start, goal):
+    def heuristic(a, b):
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    priority_queue = []
+    heappush(priority_queue, (0, start))
+    visited = set()
+    parent = {start: None}
+    cost = {start: 0}
+
+    while priority_queue:
+        game.update_display()
+        _, current = heappop(priority_queue)
+        if current in visited:
+            continue
+        visited.add(current)
+        is_food = env.check(current)
+        if current == goal or is_food:
+            # Reconstruct path
+            full_path = []
+            while current is not None:
+                full_path.append(current)
+                current = parent[current]
+            return full_path[::-1]
+
+        neighbors = env.get_valid_neighbors(current)
+        for neighbor in neighbors:
+            new_cost = cost[current] + env.get_cost(neighbor)
+            if neighbor not in cost or new_cost < cost[neighbor]:
+                cost[neighbor] = new_cost
+                priority = new_cost + heuristic(neighbor, goal)
+                heappush(priority_queue, (priority, neighbor))
+                parent[neighbor] = current
+
+    return None
 
 
-def genetic(env, start, goal):
-    return NotImplemented
+def genetic(game, env, start, goal):
+    NotImplemented

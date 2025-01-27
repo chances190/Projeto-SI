@@ -38,17 +38,22 @@ class Game:
         self.show_algorithm_options = False
 
     def handle_click(self, pos):
-        debug_rect, algo_rect = self.ui.draw_ui_elements(
+        debug_rect, algo_rect, reset_rect = self.ui.draw_ui_elements(
             self.screen, self.debug_mode, self.selected_algorithm
         )
 
         if debug_rect.collidepoint(pos):
-            self.debug_mode = not self.debug_mode
             self.agent.reset_path()
-
-        if algo_rect.collidepoint(pos):
+            self.update_movement()
+            self.debug_mode = not self.debug_mode
+        elif reset_rect.collidepoint(pos):
+            self.environment.reset()
+            self.agent = Agent(self.environment, self.environment.get_random_position())
+            self.update_movement()
+        elif algo_rect.collidepoint(pos):
             self.show_algorithm_options = not self.show_algorithm_options
-        elif self.show_algorithm_options:
+
+        if self.show_algorithm_options:
             option_rects = self.ui.draw_algorithm_options(self.screen)
             for i, rect in enumerate(option_rects):
                 if rect.collidepoint(pos):
@@ -79,23 +84,24 @@ class Game:
             self.agent.move((x + 1, y))
 
     def run_algorithm(self):
+        game = self
         env = self.environment
         start = self.agent.position
         goal = self.environment.goal
         if self.selected_algorithm == "DFS":
-            return algorithm.dfs(env, start)
+            return algorithm.dfs(game, env, start)
         elif self.selected_algorithm == "BFS":
-            return algorithm.bfs(env, start)
+            return algorithm.bfs(game, env, start)
         elif self.selected_algorithm == "Uniform":
-            return algorithm.uniform_cost(env, start)
+            return algorithm.uniform(game, env, start)
         elif self.selected_algorithm == "Greedy":
-            return algorithm.greedy(env, start, goal)
+            return algorithm.greedy(game, env, start, goal)
         elif self.selected_algorithm == "A*":
-            return algorithm.a_star(env, start, goal)
+            return algorithm.a_star(game, env, start, goal)
         elif self.selected_algorithm == "Genetic":
-            return algorithm.genetic(env, start, goal)
+            return algorithm.genetic(game, env, start, goal)
 
-    def update(self):
+    def update_movement(self):
         current_time = pygame.time.get_ticks()
         x, y = self.agent.position
         terrain = self.environment.grid[y][x].terrain_type
@@ -107,14 +113,16 @@ class Game:
             self.move_debug()
         elif self.selected_algorithm == "None":
             self.agent.move_random()
-        else:
+        elif not self.agent.path:
+            self.agent.path = self.run_algorithm()
             if not self.agent.path:
-                self.agent.path = self.run_algorithm()
-                for x, y in self.agent.path:
-                    self.environment.grid[y][x].is_path = True
+                print("No path found!")
+                return
+            for x, y in self.agent.path:
+                self.environment.grid[y][x].is_path = True
             self.agent.follow_path()
+            return
 
-            pass
         self.last_move_time = current_time
 
         if self.agent.position == self.environment.goal:
@@ -163,11 +171,14 @@ class Game:
         if self.show_algorithm_options:
             self.ui.draw_algorithm_options(self.screen)
 
+    def update_display(self):
+        self.handle_events()
+        self.render()
+
     def run(self):
         while self.running:
-            self.handle_events()
-            self.update()
-            self.render()
+            self.update_movement()
+            self.update_display()
         pygame.quit()
 
 

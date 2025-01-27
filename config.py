@@ -29,7 +29,7 @@ UI_BG_COLOR = (0, 0, 0, 178)
 UI_TEXT_COLOR = (255, 255, 255)
 UI_FONT_SIZE = 24
 BUTTON_SIZE = (150, 30)
-BUTTON_SPACING = 0
+BUTTON_SPACING = 5
 
 # Algorithms
 ALGORITHMS = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*", "Genetic"]

@@ -1,5 +1,5 @@
 # environment.py
-from config import OBSTACLE, SAND, MUD, WATER, GRID_SIZE, SCALE, DISTRIBUTION
+from config import OBSTACLE, SAND, MUD, WATER, GRID_SIZE, SCALE, DISTRIBUTION, TERRAIN_COST
 from terrain_generation import TerrainGenerator
 import numpy as np
 import random
@@ -59,9 +59,13 @@ class Environment:
     def check(self, position):
         x, y = position
         self.grid[y][x].checked = True
-        terrain_type = self.grid[y][x].terrain_type
         is_food = self.goal == position
-        return terrain_type, is_food
+        return is_food
+
+    def get_cost(self, position):
+        x, y = position
+        self.grid[y][x].checked = True
+        return TERRAIN_COST[self.grid[y][x].terrain_type]
 
     def reset(self):
         self.goal = self.get_random_position()

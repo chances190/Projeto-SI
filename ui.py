@@ -1,6 +1,14 @@
 # ui.py
 import pygame
-from config import UI_FONT_SIZE, BUTTON_SIZE, BUTTON_SPACING, UI_BG_COLOR, UI_TEXT_COLOR, ALGORITHMS
+from config import (
+    UI_FONT_SIZE,
+    BUTTON_SIZE,
+    BUTTON_SPACING,
+    UI_BG_COLOR,
+    UI_TEXT_COLOR,
+    ALGORITHMS,
+    WINDOW_WIDTH,
+)
 
 
 class UI:
@@ -19,7 +27,11 @@ class UI:
             (10, self.button_base_y + BUTTON_SIZE[1] + BUTTON_SPACING),
         )
 
-        return debug_rect, algo_rect
+        reset_rect = self.draw_button(
+            surface, "Reset", (WINDOW_WIDTH - (BUTTON_SIZE[0] + 10), self.button_base_y)
+        )
+
+        return debug_rect, algo_rect, reset_rect
 
     def draw_button(self, surface, text, position):
         rect = pygame.Rect(position, BUTTON_SIZE)
