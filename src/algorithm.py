@@ -22,6 +22,7 @@ def dfs(game, env, start):
         neighbors = env.get_valid_neighbors(current)
         for neighbor in neighbors:
             if neighbor not in visited:
+                env.set_border(neighbor,True)
                 stack.append(neighbor)
 
     return None
@@ -55,6 +56,7 @@ def bfs(game, env, start):
         for neighbor in neighbors:
             if neighbor not in visited and neighbor not in queue:
                 queue.append(neighbor)
+                env.set_border(neighbor,True)
                 parent[neighbor] = current
 
     return None
@@ -91,6 +93,7 @@ def uniform(game, env, start):
                 priority = new_cost
                 heappush(priority_queue, (priority, neighbor))
                 parent[neighbor] = current
+                env.set_border(neighbor,True)
 
     return None
 
@@ -126,7 +129,7 @@ def greedy(game, env, start, goal):
                 priority = heuristic(neighbor, goal)
                 heappush(priority_queue, (priority, neighbor))
                 parent[neighbor] = current
-
+                env.set_border(neighbor,True)
     return None
 
 
@@ -164,6 +167,7 @@ def a_star(game, env, start, goal):
                 priority = new_cost + heuristic(neighbor, goal)
                 heappush(priority_queue, (priority, neighbor))
                 parent[neighbor] = current
+                env.set_border(neighbor,True)
 
     return None
 

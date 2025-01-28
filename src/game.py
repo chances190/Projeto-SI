@@ -152,7 +152,12 @@ class Game:
 
                 if self.environment.grid[y][x].checked:
                     overlay = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
-                    overlay.fill((255, 255, 255, 128))
+                    overlay.fill((255, 255, 255, 100))
+                    self.screen.blit(overlay, rect.topleft)
+                    
+                if self.environment.grid[y][x].is_border:
+                    overlay = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                    overlay.fill((255, 255, 255, 150))
                     self.screen.blit(overlay, rect.topleft)
 
                 if self.environment.grid[y][x].is_path:

@@ -9,6 +9,7 @@ class Tile:
     def __init__(self, terrain_type):
         self.terrain_type = terrain_type
         self.checked = False
+        self.is_border = False
         self.is_path = False
 
 
@@ -59,8 +60,14 @@ class Environment:
     def check(self, position):
         x, y = position
         self.grid[y][x].checked = True
+        self.set_border(position, False)
         is_food = self.goal == position
         return is_food
+    
+    def set_border(self, position, boolean):
+        x,y = position
+        self.grid[y][x].is_border = boolean
+        return None
 
     def get_cost(self, position):
         x, y = position
@@ -73,3 +80,4 @@ class Environment:
             for tile in row:
                 tile.checked = False
                 tile.is_path = False
+                tile.is_border = False
