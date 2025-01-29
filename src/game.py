@@ -12,6 +12,7 @@ from config import (
     AGENT_COLOR,
     FOOD_COLOR,
     ALGORITHMS,
+    COLOR_GENETIC,
 )
 from environment import Environment
 from agent import Agent
@@ -164,6 +165,12 @@ class Game:
                     overlay = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
                     overlay.fill((255, 0, 0, 128))
                     self.screen.blit(overlay, rect.topleft)
+                    
+                for i, genetic_path in enumerate(self.environment.grid[y][x].is_genetic_path):
+                    if genetic_path==True:
+                        overlay = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                        overlay.fill(COLOR_GENETIC[i])
+                        self.screen.blit(overlay, rect.topleft)
 
     def draw_agent(self):
         x, y = self.agent.position

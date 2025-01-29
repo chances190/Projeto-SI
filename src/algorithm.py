@@ -179,4 +179,8 @@ def a_star(game, env, start, goal):
 
 
 def genetic(game, env, start, goal):
-    NotImplemented
+    print("oi")
+    env.create_chromosomes(start, 10)
+    env.chromosomes[0].create_path(env, 35, 24, 24, 17)
+    env.chromosomes_path()
+    game.draw_environment()

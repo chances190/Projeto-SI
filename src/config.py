@@ -33,3 +33,6 @@ BUTTON_SPACING = 5
 
 # Algorithms
 ALGORITHMS = ["None", "DFS", "BFS", "Uniform", "Greedy", "A*", "Genetic"]
+
+#Genetic Configurtion
+COLOR_GENETIC = [(255, 0, 0, 128), (255, 153, 0, 128), (203, 255, 0, 128), (51, 255, 0, 128), (0, 255, 102, 128), (0, 255, 255, 128), (0, 102, 255, 128), (50, 0, 255, 128), (204, 0, 255, 128), (255, 0, 152, 128)]

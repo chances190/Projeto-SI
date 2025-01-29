@@ -3,6 +3,7 @@ from config import OBSTACLE, SAND, MUD, WATER, GRID_SIZE, SCALE, DISTRIBUTION, T
 from terrain_generation import TerrainGenerator
 import numpy as np
 import random
+from genetic import Chromosome
 
 
 class Tile:
@@ -11,12 +12,15 @@ class Tile:
         self.checked = False
         self.is_border = False
         self.is_path = False
+        self.is_genetic_path = []
 
 
 class Environment:
     def __init__(self):
         self.grid = self.create_grid()
         self.goal = self.get_random_position()
+        self.chromosomes = []
+        
 
     def create_grid(self):
         noise = TerrainGenerator.generate_perlin_noise(GRID_SIZE, SCALE)
@@ -57,6 +61,8 @@ class Environment:
                     neighbors.append((nx, ny))
         return neighbors
 
+        
+        
     def check(self, position):
         x, y = position
         self.grid[y][x].checked = True
@@ -64,11 +70,30 @@ class Environment:
         is_food = self.goal == position
         return is_food
     
+    def chromosomes_path(self):
+        for i, chromo in enumerate(self.chromosomes):
+            for position in chromo.path:
+                x,y = position
+                self.grid[y][x].is_genetic_path[i] = True
+                
+    
+    def set_genetic_background(self, quantity):
+        for row in self.grid:
+            for tile in row:
+                for i in range(quantity):
+                    tile.is_genetic_path.append(False)
+    
     def set_border(self, position, boolean):
         x,y = position
         self.grid[y][x].is_border = boolean
         return None
 
+    def create_chromosomes(self, position, quantity):
+        for i in range(quantity):
+            self.chromosomes.append(Chromosome(position))
+        self.set_genetic_background(quantity)
+        
+        
     def get_cost(self, position):
         x, y = position
         self.grid[y][x].checked = True
