@@ -6,6 +6,7 @@ def dfs(game, env, start):
     stack = [start]
     visited = set()
     path = []
+    parent = {start: None}
 
     while stack:
         if not game.update_display():
@@ -17,13 +18,18 @@ def dfs(game, env, start):
         path.append(current)
         is_food = env.check(current)
         if is_food:
-            return path
+            full_path = []
+            while current is not None:
+                full_path.append(current)
+                current = parent[current]
+            return full_path[::-1]
 
         neighbors = env.get_valid_neighbors(current)
         for neighbor in neighbors:
             if neighbor not in visited:
                 env.set_border(neighbor,True)
                 stack.append(neighbor)
+                parent[neighbor] = current
 
     return None
 
