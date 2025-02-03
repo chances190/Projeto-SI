@@ -70,7 +70,7 @@ class Environment:
         is_food = self.goal == position
         return is_food
     
-    def chromosomes_path(self):
+    def chromosomes_path(self, position, idx):
         for i, chromo in enumerate(self.chromosomes):
             for position in chromo.path:
                 x,y = position
@@ -83,16 +83,16 @@ class Environment:
                 for i in range(quantity):
                     tile.is_genetic_path.append(False)
     
+
+    def create_chromosomes(self, position, quantity):
+        for i in range(quantity):
+            self.chromosomes.append(Chromosome(position, i))
+        self.set_genetic_background(quantity)
+        
     def set_border(self, position, boolean):
         x,y = position
         self.grid[y][x].is_border = boolean
         return None
-
-    def create_chromosomes(self, position, quantity):
-        for i in range(quantity):
-            self.chromosomes.append(Chromosome(position))
-        self.set_genetic_background(quantity)
-        
         
     def get_cost(self, position):
         x, y = position
@@ -106,3 +106,5 @@ class Environment:
                 tile.checked = False
                 tile.is_path = False
                 tile.is_border = False
+                for i in range(len(tile.is_genetic_path)):
+                    tile.is_genetic_path[i] = False
