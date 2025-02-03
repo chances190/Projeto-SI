@@ -108,3 +108,9 @@ class Environment:
                 tile.is_border = False
                 for i in range(len(tile.is_genetic_path)):
                     tile.is_genetic_path[i] = False
+
+    def reset_genetic_path(self):
+        for row in self.grid:
+            for tile in row:
+                for i in range(len(tile.is_genetic_path)):
+                    tile.is_genetic_path[i] = False

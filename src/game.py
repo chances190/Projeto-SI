@@ -103,7 +103,7 @@ class Game:
         elif self.selected_algorithm == "A*":
             return algorithm.a_star(game, env, start, goal)
         elif self.selected_algorithm == "Genetic":
-            return algorithm.genetic(game, env, start, goal)
+            return algorithm.genetic(game, env, start, goal, 3)
 
     def update_movement(self):
         current_time = pygame.time.get_ticks()

@@ -2,12 +2,16 @@ import random
 import numpy as np
 from config import OBSTACLE, SAND, MUD, WATER, TERRAIN_COST, GRID_SIZE
 
+
 class Chromosome:
-    def __init__(self, position, idx, color=None):
+    def __init__(self, position, idx, genes=None, color=None):
         self.position = position
         self.color = color
         self.path = []
-        self.genes = []
+        if genes is None:
+            self.genes = []
+        else:
+            self.genes = genes
         self.hit = False
         self.reach = False
         self.cost = 0
@@ -22,8 +26,12 @@ class Chromosome:
         self.cost = 0
         for (x,y) in self.path:
             self.cost += TERRAIN_COST[env.grid[y][x].terrain_type]
-        dist = heuristic(env.goal, self.path[len(self.path)-1])
-        self.cost += dist*10
+        dist = heuristic(env.goal, self.path[len(self.path)-1] if len(self.path)>0 else self.position)
+        self.cost += dist*6
+        if self.hit: self.cost *= 10
+        if self.reach: self.cost /= 10
+
+        return 1/self.cost 
 
 
     def create_gene(self, a, b, c, d, max_path, debug=None):
@@ -60,18 +68,22 @@ class Chromosome:
                 self.reach=True
                 break
 
-            if not (0 <= current[0] < GRID_SIZE and 0 <= current[1] < GRID_SIZE):
-                if self.grid[ny][nx].terrain_type == OBSTACLE:
+            nx, ny = current[0]+position[0], current[1]+position[1]   
+            neighbor = (nx,ny)
+
+            if 0 <= nx < GRID_SIZE and 0 <= ny < GRID_SIZE:
+                if (env.grid[ny][nx].terrain_type == OBSTACLE):
                     self.hit = True
                     break
 
-            nx, ny = current[0]+position[0], current[1]+position[1]   
-            neighbor = (nx,ny)
-            env.chromosomes_path(current, self.id)
-            parent[neighbor] = current
-            self.path.append(neighbor)
-            current = neighbor
-            env.set_border(neighbor,True)
+                env.chromosomes_path(current, self.id)
+                parent[neighbor] = current
+                self.path.append(neighbor)
+                current = neighbor
+                env.set_border(neighbor,True)
+            else :
+                self.hit = True
+                break
 
         self.cost = self.calculate_cost(env)
 
@@ -84,7 +96,7 @@ class Chromosome:
             return new_genes
         
     def mutate(self,probability):
-            for i in range(self.genes):
+            for i in range(len(self.genes)):
                 if random.random()<probability:
-                    self.genes[i] = random.choices([(-1, 0), (1, 0), (0, -1), (0, 1)], [1,1,1,1]/4, k=1)[0]
+                    self.genes[i] = random.choices([(-1, 0), (1, 0), (0, -1), (0, 1)], [0.25,0.25,0.25,0.25], k=1)[0]
             

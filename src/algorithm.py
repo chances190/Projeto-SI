@@ -1,6 +1,8 @@
 from collections import deque
 from heapq import heappop, heappush
-
+import numpy as np
+import random
+from genetic import Chromosome
 
 def dfs(game, env, start):
     stack = [start]
@@ -178,13 +180,34 @@ def a_star(game, env, start, goal):
     return None
 
 
-def genetic(game, env, start, goal):
+def genetic(game, env, start, goal,qtt_generation):
     env.create_chromosomes(start, 10)
     for i in range(len(env.chromosomes)):
         env.chromosomes[i].create_gene(35, 24, 24, 17, 500)
 
+    cost = []
     for i in range(len(env.chromosomes)):
         env.chromosomes[i].generate_path(game, env)
-    #game.draw_environment()
+        cost.append(env.chromosomes[i].calculate_cost(env))
+
+    cost_probabilities = (cost/np.sum(cost))
+    print(cost_probabilities)
+    for i in range(qtt_generation):
+        new_chromosomes = []
+        for i in range(len(env.chromosomes)):
+            chromo_A = random.choices(env.chromosomes, cost_probabilities,k=1)[0]
+            chromo_B = random.choices(env.chromosomes, cost_probabilities,k=1)[0]
+            new_genes = chromo_A.crossover(chromo_B)
+            chromosome_child = Chromosome(start, i, new_genes)
+            new_chromosomes.append(chromosome_child)
+
+        env.chromosomes = new_chromosomes
+
+        for i in range(len(env.chromosomes)):
+            env.chromosomes[i].generate_path(game, env)
+            cost.append(env.chromosomes[i].calculate_cost(env))
+
+        env.reset_genetic_path()
+    #for generation in range(qtt_generation):
     
     return env.chromosomes[0].path
