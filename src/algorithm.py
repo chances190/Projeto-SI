@@ -181,7 +181,10 @@ def a_star(game, env, start, goal):
 def genetic(game, env, start, goal):
     env.create_chromosomes(start, 10)
     for i in range(len(env.chromosomes)):
-        env.chromosomes[i].create_path(env, game, 35, 24, 24, 17, 500)
+        env.chromosomes[i].create_gene(35, 24, 24, 17, 500)
+
+    for i in range(len(env.chromosomes)):
+        env.chromosomes[i].generate_path(game, env)
     #game.draw_environment()
     
     return env.chromosomes[0].path
