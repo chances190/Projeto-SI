@@ -3,6 +3,7 @@ from config import OBSTACLE
 import random
 
 
+
 class Agent:
     def __init__(self, environment, position):
         self.environment = environment
